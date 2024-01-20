@@ -1,14 +1,43 @@
-// Offset é quem vai determinar a paginação do documento JSON
-const offset = 0;
-// Limit determina o limite de informações (no exemplo, objetos) que vem na página
-const limit = 10;
-// Passando as variáveis para o URL, deixando-o dinâmico
-const url = `https://pokeapi.co/api/v2/pokemon?${offset}&${limit}`;
+const pokemonList = document.getElementById('pokemonList')
+const loadMoreButton = document.getElementById('loadMoreButton')
 
-fetch(url)
-    // Este then converte a response para JSON
-    .then((response) => response.json())
-    // Este then recebe a response do then acima já
-    .then((jsonBody) => console.log(jsonBody))
-    .catch((error) => console.error(error))
-    .finally(() => console.log('Requisição concluída'))
+const maxRecords = 151
+const limit = 10
+let offset = 0
+
+function loadPokemonItems(offset, limit) {
+    pokeApi.getPokemons(offset, limit).then((pokemons = []) => {
+        const newHtml = pokemons.map((pokemon) => `
+            <li class="pokemon ${pokemon.type}">
+                <span class="number">#${pokemon.number}</span>
+                <span class="name">${pokemon.name}</span>
+
+                <div class="detail">
+                    <ol class="types">
+                        ${pokemon.types.map((type) => `<li class="type ${type}">${type}</li>`).join('')}
+                    </ol>    
+
+                    <img src="${pokemon.photo}" alt="${pokemon.name}">
+                </div>    
+            </li>
+        `).join('')
+
+        pokemonList.innerHTML += newHtml
+    })
+}
+
+loadPokemonItems(offset, limit)
+
+loadMoreButton.addEventListener('click', () => {
+    offset += limit
+    const qtdRecordNextPage = offset + limit
+
+    if (qtdRecordNextPage >= maxRecords) {
+        const newLimit = maxRecords - offset
+        loadPokemonItems(offset, newLimit)
+
+        loadMoreButton.parentElement.removeChild(loadMoreButton)
+    } else {
+        loadPokemonItems(offset, limit)
+    }
+})
